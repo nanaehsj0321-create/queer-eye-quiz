@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>Queer Eye 名言クイズ</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f7f7fb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .card {
+      background: #fff;
+      width: 420px;
+      padding: 24px 28px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    h1 {
+      font-size: 20px;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+    .question {
+      font-size: 18px;
+      margin: 20px 0;
+      text-align: center;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    button:hover {
+      transform: translateY(-2px);
+    }
+    .correct { background: #c8f7dc; }
+    .wrong { background: #ffd6d6; }
+    .next {
+      background: #333;
+      color: #fff;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>💖 Queer Eye 名言クイズ</h1>
+    <div id="question" class="question"></div>
+    <div id="choices"></div>
+    <div id="feedback" style="margin-top:12px;font-size:14px;line-height:1.6;"></div>
+    <button id="nextBtn" class="next" onclick="nextQuestion()" style="display:none;">次へ</button>
+  </div>
+
+  <script>
+    const quiz = [
+      {
+        q: "『あなたは、すでに価値がある』に対応する英語は？",
+        choices: [
+          "You are enough.",
+          "You are worthy.",
+          "You matter to me."
+        ],
+        answer: 1,
+        explain: "『worthy』は“価値がある／尊い”という意味。『enough』は“十分”で近いけどニュアンスが違うよ。"
+      },
+      {
+        q: "『セルフケアは、わがままじゃない』の英語は？",
+        choices: [
+          "Self-care isn’t selfish.",
+          "Taking care is important.",
+          "Care yourself first."
+        ],
+        answer: 0,
+        explain: "『isn’t selfish』で“わがままではない”を直球で表現。②③は意味は通じるけど名言としての言い回しではないよ。"
+      },
+      {
+        q: "『向き合わない傷は、癒せない』の英語は？",
+        choices: [
+          "You can’t fix hidden pain.",
+          "You can’t heal what you don’t acknowledge.",
+          "Pain disappears if ignored."
+        ],
+        answer: 1,
+        explain: "ポイントは『acknowledge（認める／受け止める）』。向き合う＝認めることが癒しの第一歩、って意味だよ。"
+      },
+      {
+        q: "『遠慮せず、そこにいていい』の英語は？",
+        choices: [
+          "You belong here.",
+          "It’s okay to take up space.",
+          "You can stand out."
+        ],
+        answer: 1,
+        explain: "『take up space』は“存在感を持つ／遠慮せず場を占めていい”のニュアンス。①は“居場所がある”で近いけど別表現。"
+      }
+    ];
+
+    let current = 0;
+
+    function loadQuestion() {
+      document.getElementById('nextBtn').style.display = 'none';
+      document.getElementById('feedback').textContent = '';
+
+      const q = quiz[current];
+      document.getElementById('question').textContent = q.q;
+
+      const choicesDiv = document.getElementById('choices');
+      choicesDiv.innerHTML = '';
+
+      q.choices.forEach((choice, index) => {
+        const btn = document.createElement('button');
+        btn.textContent = choice;
+        btn.onclick = () => selectAnswer(btn, index === q.answer);
+        choicesDiv.appendChild(btn);
+      });
+    }
+
+    function selectAnswer(button, isCorrect) {
+      const q = quiz[current];
+      const buttons = document.querySelectorAll('#choices button');
+
+      buttons.forEach((b, idx) => {
+        b.disabled = true;
+        if (idx === q.answer) b.classList.add('correct');
+      });
+
+      const feedback = document.getElementById('feedback');
+
+      if (isCorrect) {
+        feedback.textContent = `✅ 正解！ ${q.explain}`;
+      } else {
+        button.classList.add('wrong');
+        feedback.textContent = `❌ ちがうよ。正解は「${q.choices[q.answer]}」。理由：${q.explain}`;
+      }
+
+      document.getElementById('nextBtn').style.display = 'block';
+    }
+
+    function nextQuestion() {
+      current++;
+      if (current < quiz.length) {
+        loadQuestion();
+      } else {
+        document.querySelector('.card').innerHTML = '<h1>🎉 全問クリア！</h1><p style="text-align:center;">あなたはもう Fab Five マインド✨</p>';
+      }
+    }
+
+    // --- Tests (console) ---
+    // Purpose: prevent accidental syntax/structure regressions when editing.
+    function runTests() {
+      try {
+        console.assert(Array.isArray(quiz) && quiz.length > 0, 'quiz should be a non-empty array');
+        quiz.forEach((item, i) => {
+          console.assert(typeof item.q === 'string' && item.q.length > 0, `quiz[${i}].q should be a non-empty string`);
+          console.assert(Array.isArray(item.choices) && item.choices.length >= 2, `quiz[${i}].choices should be an array (len>=2)`);
+          console.assert(Number.isInteger(item.answer) && item.answer >= 0 && item.answer < item.choices.length, `quiz[${i}].answer should be a valid index`);
+          console.assert(typeof item.explain === 'string' && item.explain.length > 0, `quiz[${i}].explain should be a non-empty string`);
+        });
+
+        // DOM sanity
+        console.assert(document.getElementById('question'), '#question should exist');
+        console.assert(document.getElementById('choices'), '#choices should exist');
+        console.assert(document.getElementById('feedback'), '#feedback should exist');
+        console.assert(document.getElementById('nextBtn'), '#nextBtn should exist');
+
+        // Behavior sanity: after loadQuestion, number of buttons should match choices length
+        const before = document.querySelectorAll('#choices button').length;
+        loadQuestion();
+        const after = document.querySelectorAll('#choices button').length;
+        console.assert(after === quiz[current].choices.length, 'loadQuestion should render correct number of choice buttons');
+        console.assert(after !== before || before === 0, 'loadQuestion should (re)render choices');
+
+        console.log('✅ Tests passed');
+      } catch (e) {
+        console.error('❌ Tests failed', e);
+      }
+    }
+
+    // Initialize
+    runTests();
+    loadQuestion();
+  </script>
+</body>
+</html>
