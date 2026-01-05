@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>中1 日本の歴史クイズ</title>
+  <style>
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+      background: linear-gradient(180deg,#fef6e4,#f3d2c1);
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      min-height:100vh;
+    }
+    .game{
+      background:#fff;
+      width:min(520px, 92vw);
+      border-radius:16px;
+      box-shadow:0 10px 30px rgba(0,0,0,.15);
+      padding:24px;
+    }
+    h1{
+      margin-top:0;
+      font-size:20px;
+      text-align:center;
+    }
+    .progress{
+      font-size:14px;
+      color:#555;
+      text-align:center;
+      margin-bottom:12px;
+    }
+    .question{
+      font-size:16px;
+      margin:16px 0;
+    }
+    .choices{
+      display:grid;
+      gap:10px;
+    }
+    button.choice{
+      padding:10px 14px;
+      font-size:15px;
+      border-radius:10px;
+      border:1px solid #ddd;
+      background:#f9f9f9;
+      cursor:pointer;
+    }
+    button.choice:hover{
+      background:#e3f6f5;
+    }
+    button.choice.correct{
+      background:#c7f9cc;
+      border-color:#57cc99;
+    }
+    button.choice.wrong{
+      background:#ffd6d6;
+      border-color:#ff6b6b;
+    }
+    .result{
+      margin-top:14px;
+      font-size:14px;
+    }
+    .next{
+      margin-top:16px;
+      width:100%;
+      padding:10px;
+      font-size:15px;
+      border-radius:10px;
+      border:none;
+      background:#8bd3dd;
+      cursor:pointer;
+      display:none;
+    }
+    .score{
+      text-align:center;
+      font-size:18px;
+    }
+  </style>
+</head>
+<body>
+  <div class="game">
+    <h1>中学1年生 日本の歴史クイズ 🇯🇵</h1>
+    <div id="progress" class="progress"></div>
+    <div id="question" class="question"></div>
+    <div id="choices" class="choices"></div>
+    <div id="result" class="result"></div>
+    <button id="next" class="next">つぎへ</button>
+  </div>
+
+<script>
+const quiz = [
+  {
+    q: '日本で最も古い時代はどれ？',
+    c: ['弥生時代','縄文時代','古墳時代','奈良時代'],
+    a: 1,
+    e: '縄文時代は、狩りや採集を中心とした最も古い時代だよ。'
+  },
+  {
+    q: '縄文時代の人々の生活の特徴は？',
+    c: ['米づくり','狩りや採集','武士の活躍','都づくり'],
+    a: 1,
+    e: '縄文時代は自然のめぐみを利用した生活をしていたよ。'
+  },
+  {
+    q: '弥生時代に広まったものは？',
+    c: ['仏教','鉄砲','稲作','漢字'],
+    a: 2,
+    e: '稲作が始まり、村ができ、くらしが大きく変わったんだ。'
+  },
+  {
+    q: '古墳がつくられた時代は？',
+    c: ['縄文時代','弥生時代','古墳時代','平安時代'],
+    a: 2,
+    e: '古墳時代には、力をもつ人のお墓として古墳が作られたよ。'
+  },
+  {
+    q: '日本最大の前方後円墳は？',
+    c: ['高松塚古墳','仁徳天皇陵古墳','石舞台古墳','キトラ古墳'],
+    a: 1,
+    e: '仁徳天皇陵古墳は世界でも有数の大きさだよ。'
+  },
+  {
+    q: '十七条の憲法を定めた人物は？',
+    c: ['聖徳太子','藤原道長','源頼朝','足利尊氏'],
+    a: 0,
+    e: '聖徳太子は、政治のルールを整えた人物だね。'
+  },
+  {
+    q: 'はじめて本格的な都が置かれたのは？',
+    c: ['平安京','江戸','飛鳥','奈良（平城京）'],
+    a: 3,
+    e: '奈良時代の平城京が、日本最初の本格的な都だよ。'
+  },
+  {
+    q: '奈良時代に広まった宗教は？',
+    c: ['神道','仏教','キリスト教','イスラム教'],
+    a: 1,
+    e: '仏教は国を守るための宗教として広められたよ。'
+  },
+  {
+    q: '大化の改新の目的は？',
+    c: ['武士の力を強くする','天皇中心の国づくり','外国と戦う','江戸幕府を開く'],
+    a: 1,
+    e: '天皇を中心とした政治を行うための改革だよ。'
+  },
+  {
+    q: '歴史を学ぶときに大切なことは？',
+    c: ['年号の暗記','名前だけ覚える','出来事の流れを理解','テストの点数'],
+    a: 2,
+    e: '流れを理解すると、暗記も楽になるよ！'
+  }
+];
+
+let current = 0;
+let score = 0;
+
+const qEl = document.getElementById('question');
+const cEl = document.getElementById('choices');
+const rEl = document.getElementById('result');
+const nBtn = document.getElementById('next');
+const pEl = document.getElementById('progress');
+
+function loadQuiz(){
+  const q = quiz[current];
+  pEl.textContent = `第 ${current+1} 問 / ${quiz.length} 問`;
+  qEl.textContent = q.q;
+  cEl.innerHTML = '';
+  rEl.textContent = '';
+  nBtn.style.display = 'none';
+
+  q.c.forEach((choice,i)=>{
+    const btn = document.createElement('button');
+    btn.className = 'choice';
+    btn.textContent = choice;
+    btn.onclick = ()=>select(i, btn);
+    cEl.appendChild(btn);
+  });
+}
+
+function select(i, btn){
+  const q = quiz[current];
+  const buttons = document.querySelectorAll('.choice');
+  buttons.forEach(b=>b.disabled=true);
+
+  if(i === q.a){
+    btn.classList.add('correct');
+    rEl.textContent = '⭕ 正解！ ' + q.e;
+    score++;
+  } else {
+    btn.classList.add('wrong');
+    buttons[q.a].classList.add('correct');
+    rEl.textContent = '❌ まちがい。 ' + q.e;
+  }
+  nBtn.style.display = 'block';
+}
+
+nBtn.onclick = ()=>{
+  current++;
+  if(current < quiz.length){
+    loadQuiz();
+  } else {
+    document.querySelector('.game').innerHTML = `
+      <h1>おわり！🎉</h1>
+      <p class="score">${quiz.length}問中 <strong>${score}</strong> 問正解！</p>
+      <p style="text-align:center;">よくがんばりました👏</p>
+    `;
+  }
+};
+
+loadQuiz();
+</script>
+</body>
+</html>
